@@ -1,0 +1,51 @@
+/*
+ * (C) P.Horton 2004,2005,2006
+ *
+ * $Id: colo-rom-image.lnk 186 2006-01-17 23:03:58Z pdh $
+ *
+ * This code is covered by the GNU General Public License. For details see the file "COPYING".
+ */
+
+__stack = 0x80100000;
+
+SECTIONS
+{
+	. = __stack - 0x4000;
+
+	.data : AT(__etext)
+	{
+		__data = .;
+		*(.data)
+		__edata = .;
+	}
+
+	.bss :	
+	{
+		__bss = .;
+		*(.scommon)
+		_gp = .;
+		*(.sbss)
+		*(COMMON)
+		*(.bss)
+		__ebss = .;
+	}
+
+
+	. = 0xbfc00000;
+
+	.text :
+	{
+		__text = .;
+		start.o(.text)
+		*(.text)
+		*(.rodata*)
+		__stage2 = .;
+		*(.stage2)
+		__etext = .;
+	}
+
+	/DISCARD/ :
+	{
+		*(.reginfo)
+	}
+}

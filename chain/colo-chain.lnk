@@ -1,0 +1,46 @@
+/*
+ * (C) P.Horton 2004,2005,2006
+ *
+ * $Id: colo-chain.lnk 186 2006-01-17 23:03:58Z pdh $
+ *
+ * This code is covered by the GNU General Public License. For details see the file "COPYING".
+ */
+
+SECTIONS
+{
+	. = 0x80080000;
+
+	__stack = .;
+
+	.text :
+	{
+		start.o(.text)
+		*(.text)
+		*(.rodata*)
+		__stage2 = .;
+		*(.stage2)
+	}
+
+	.data :
+	{
+		*(.data)
+	}
+
+	.bss :	
+	{
+		__bss = .;
+		*(.scommon)
+		_gp = .;
+		*(.sbss)
+		*(COMMON)
+		*(.bss)
+		__ebss = .;
+	}
+
+	/DISCARD/ :
+	{
+		*(.reginfo)
+	}
+}
+
+ENTRY(_start);

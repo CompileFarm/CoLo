@@ -1,0 +1,38 @@
+# $Id: README 122 2004-10-18 22:47:37Z pdh $
+
+REPLACEMENT COBALT Qube2/RaQ2 BOOT LOADER
+=========================================
+
+See the file INSTALL for installation instructions.
+
+FEATURES
+--------
+
+* Will boot from any primary Linux partition containing an EXT2/3 file
+  system. The boot file system is no longer required to be a formatted as an
+  EXT2 revision 0 file system. Will also boot from a whole device.
+
+* The maximum size of kernel that can be booted is only constrained by
+  available memory. A 16MB unit will be able to boot a 7MB uncompressed
+  kernel (the limit is less for a compressed kernel, probably around 5MB).
+
+* Support for booting from EXT2 formatted CDROMs.
+
+* Support for network booting via TFTP or NFS with DHCP.
+
+* Provides an LCD boot menu (hold the "ENTER" and "SELECT" buttons whilst
+  booting the unit).
+
+LIMITATIONS
+-----------
+
+* Will not currently boot from logical (extended) partitions.
+
+* Network booting over NFS has not been checked to see whether it works with
+  the original restore CD (I don't have a suitable network card). To test this
+  CoLo would have to be resident in Flash, so it's only for the brave and
+  fearless.
+
+-- Peter Horton, pdh@colonel-panic.org --
+
+# vi:set ts=3 sw=3 tw=78:

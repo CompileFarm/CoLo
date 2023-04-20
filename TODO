@@ -1,0 +1,24 @@
+# $Id: TODO 190 2006-01-22 15:26:56Z pdh $
+
+In no particular order ...
+
+*	Document radix of shell parameters. Add default radix parameter to
+	evaluate() to tidy this up.
+
+*	Remove excess debugging messages.
+
+*	Add support for booting from LVM setups.
+
+*	Add support for loading initrd via S-records (more generic initrd support).
+
+*	Sort out exactly where $sp should point during the various stages.
+
+*	Set $sp when chain loading kernel.
+
+*	Add support for booting from logical (extended) partitions.
+
+*	Add support for second IDE channel (NASRaQ).
+
+-- Peter Horton, pdh@colonel-panic.org --
+
+# vi:set ts=3 sw=3 tw=78:

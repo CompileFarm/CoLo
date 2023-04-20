@@ -1,0 +1,321 @@
+# $Id: CHANGES 195 2006-08-10 22:03:35Z pdh $
+
+CoLo 1.22 (2006-08-10)
+----------------------
+
+*	Fix build failure on GCC 4.1.
+
+*	Tweaked INSTALL.
+	[Martin Michlmayr]
+
+*	Fixed 'netcon' to not cause an assert in UDP code.
+
+*	Added support for CF cards in CF/IDE adapters (not tested).
+
+CoLo 1.21 (2006-01-22)
+----------------------
+
+*	Merged "screen" and "minicom" keymaps.
+
+*	Added "delete word" to line editor ('<ctrl>w').
+
+*	Added 'relocate' command which relocates the initrd image to follow the
+	kernel image. Required to use initrd images with current 2.6.x kernels.
+
+*	'mount' command can now be aborted.
+
+CoLo 1.20 (2006-01-16)
+----------------------
+
+*	Fix menu cancel/abort/error returns.
+
+*	Update NV format to include keymap.
+
+*	Added keymap for "screen".
+
+*	Wait for network interface transmit ring to drain when disabling network
+	interface. This should improve net console output.
+
+*	Added header file dependency checking to stage1, stage2 and chain.
+
+CoLo 1.19 (2005-04-03)
+----------------------
+
+*	Fixed stupid bug in ordering of LCD initialisation. This would cause
+	installs of 1.17 or 1.18 which weren't an upgrade from 1.16 to crash
+	early in stage2.
+
+*	Added "README.tools" to tools directory.
+
+*	Renamed 'md5rom' to 'copy-rom' and added the ability to save a copy of the
+	ROM to a file.
+
+*	Moved PCI timeout / retry counter initialisation to PCI initialisation
+	code. We now use a retry count of 255 rather than retrying forever. The
+	kernel needs a similiar fix.
+
+*	Improved PCI bus scan.
+
+CoLo 1.18 (2005-03-22)
+----------------------
+
+*	Added UDP network console support. This adds a 'netcon' command and
+	associated variables, and a new boot menu item "Network Shell".
+
+*	Added "ncon" to tools directory. Very simple net console client.
+
+*	PCI serial support switch moved to NV flag 7.
+
+CoLo 1.17 (2005-02-20)
+----------------------
+
+*	DHCP client now broadcasts DHCPREQUEST packets. It also includes the
+	"server identifier" option from the server in the request. Fixed bug where
+	we weren't appending an "end options" tag to the options. [RFC2131]
+
+*	Dropped "no matching socket" diagnostic message.
+
+*	Simplified display of memory size on boot.
+
+*	Added "Cancel" option to 'paneld' menus.
+
+*	Added horizontal scrolling menus to 'paneld' (Controlled by the '-h'
+	option).
+
+*	Added horizontal scrolling menus to shell. Controlled by an NV flag (see
+	'nvflags' command in README.shell).
+
+*	Reset menu timeout when a button is pressed.
+
+*	Removed ARP diagnostic messages.
+
+CoLo 1.16 (2004-12-16)
+----------------------
+
+*	Force menu choice of console on/off on upgrade from earlier versions.
+
+*	Fix 'flash-tool' and 'flash' command to work with TMS29F040 Flash.
+
+CoLo 1.15 (2004-11-28)
+----------------------
+
+*	Added link detection to network driver.
+
+*	Added support for 21041 network controller (2700WG units).
+
+*	Added clock speed detection (stage2 only) to ensure timeouts and delays are
+	consistent regardless of CPU speed.
+
+*	Added new command 'sleep'.
+
+CoLo 1.14 (2004-10-26)
+----------------------
+
+*	Cleaned up build system and added cross compile support.
+	[cross compile suggestion / gcc-3.4 link fix - Sebastien Vajda]
+	[compiler flag suggestions - Thiemo Seufer]
+
+*	Added new example boot script 'menu.colo' showing new features.
+
+*	Variable expansion in the shell is now carried out before argument
+	splitting.  This means variables can now span arguments e.g.
+
+		var message "'first' 'second'"
+		lcd {message}
+
+*	Reworked the LCD menu command. The 'menu' command has been removed and
+	replaced with a new command, 'select'. The new command justs sets a
+	variable to the index of the selected item which can then be used with
+	'goto'.
+
+*	Added 'noop' command, which does nothing. When combined with the 'onfail'
+	command it can be used for checking the existence of variables.
+
+*	Added script commands 'goto', 'onfail', 'exit' and 'abort'.
+
+*	Added positional marks in scripts using the '@' character.
+
+*	Scripts can now be nested.
+
+*	The 'console-speed' variable is now only available when the serial port is
+	enabled.
+
+*	Fixed up support for booting 64-bit kernels (32-bit support was reorganised
+	too). 32-bit kernels must be linked for KSEG0 or KSEG1, 64-bit kernels for
+	CKSEG0, CKSEG1 or XKPHYS.
+
+*	Ensure we read from Galileo PCI RETRY/TIMEOUT register before writing to
+	it. A comment in the kernel source indicates this might be necessary to
+	stop Galileo locking up on early units.
+
+*	Added a '-n' command line option to 'putlcd' which allows the user to write
+	to a single line of the LCD without affecting the other line.
+
+*	Added big fat warning to 'flash-tool' (just in case).
+
+CoLo 1.13 (2004-08-30)
+----------------------
+
+*	Speeded up raw LCD access in LCD tools library.
+
+*	Added 'on' and 'off' options to the 'serial' command.
+
+*	Added 'colo-perm' and 'md5rom' to build.
+
+*	Added missing include to paneld.c.
+
+CoLo 1.12 (2004-08-20)
+----------------------
+
+*	The LCD tools 'putlcd', 'paneld' and 'e2fsck-lcd' are now built around a
+	common library. The library has support for using direct access to the LCD
+	via /dev/mem (the default) or driver access via the Cobalt LCD driver.
+
+	To make the library use the Cobalt LCD driver you need to export an
+	environment variable LCD_DEVICE with the name of the device. If LCD_DEVICE
+	is an empty string the library will use the default device name, /dev/lcd.
+
+*	Added a '-d' command line option to 'paneld' which makes it fork itself
+	into the background on startup.
+
+*	Added 'menu' boot shell command for implementing LCD menus in scripts.
+	This feature makes it possible to choose from a list of multiple
+	kernels/configurations to boot (see example in README.shell).
+
+*	Fixed a couple of off by one errors in the 'boot' command.
+
+*	Added 'console disable' to the non-volatile flags. This defers initialising
+	the serial port until the boot shell is entered and should make it possible
+	to use CoLo on units which don't have a serial port. This flag will be set
+	by default on new installs, but will be clear on units which have a recent
+	CoLo install already. Might also be useful where the serial port is used
+	for a modem etc.
+
+*	Added man pages for 'paneld' and 'e2fsck-lcd'.
+	[Martin Michlmayr]
+
+CoLo 1.11 (2004-07-28)
+----------------------
+
+*	Build all the tools.
+
+*	You can now break out of the boot menu via the console.
+
+*	Added man pages for 'colo-perm' and 'md5rom'.
+	[Martin Michlmayr]
+
+*	Added 'e2fsck-lcd', file check progress bar on LCD.
+
+*	Fixed LCD second row offset (all over).
+
+*	Make shell refuse to load chain loader.
+
+*	Added simple front panel daemon 'paneld'.
+
+*	Added 'restrict' command to shell.
+
+CoLo 1.10 (2004-05-23)
+----------------------
+
+*	Fixed loading of files with sparse blocks.
+
+*	Added signature to Flash, and 'colo-perm' to test for it.
+
+*	Changed PCI latency registers to 64 (matches kernel default).
+
+*	Added NFS support ('nfs' command).
+
+*	Removed debugging output from chain loader. Chain loader now uses LCD for
+ 	error messages.
+
+*	Added command 'serial' for changing serial baud rate. Baud rate setting is
+	non-volatile.
+
+CoLo 1.9 (2004-05-02)
+---------------------
+
+*	CTRL-C now acts as a break key (in addition to SPACE).
+
+*	Comments are now only supported in scripts.
+
+*	The 'script' command has been changed to execute a script already loaded
+ 	into memory via the 'load', 'tftp' or 'download' commands.
+
+	** NOTE **
+
+		Scripts must now begin with the line '#:CoLo:#'.
+
+*	Automatic insertion of the kernel 'initrd=' command line argument has been
+ 	removed. All initrd parameters are now available in variables.
+
+*	Made use of non-volatile storage on RTC.
+
+*	Renamed 'dflags' command to 'nvflags' and made the flags non-volatile.
+
+*	Added boot menu and 'boot' command.
+
+	*note*
+
+		If you do not want the boot menu to appear every boot use the command
+		'boot default 1' (see README.shell).
+
+*	Added 'variable' command.
+
+*	Implemented variable substition in shell command lines.
+
+*	DHCP now sets variables with boot information.
+
+*	Added 'lcd' command.
+
+CoLo 1.8 (2004-04-26)
+---------------------
+
+*	Added 'pci' command.
+
+*	Added 'ping' command.
+
+*	Added 'tftp' command.
+
+*	Added network stack (the 'net' command).
+
+*	Added man pages for 'flash-tool' and 'putlcd'.
+	[Martin Michlmayr]
+
+CoLo 1.6 (2004-04-18)
+---------------------
+
+*	Added support for RAID partitions.
+	[Christian Mock]
+
+*	The layout of the source tree has been tidied up.
+
+*	Stage 2 is now loaded at the top of RAM rather than the bottom. We can now
+	load kernels linked to run at 0x80000000. This is a big change, but it all
+	seems to work.
+
+	Unfortunately the chain loader can no longer detect if it's being loaded
+	from "CoLo".
+
+*	Build output files are now 'colo-rom-image.bin' and 'colo-chain.elf'.
+
+*	Boot loader now sources the script '/boot/default.colo' by default, rather
+	than '/boot/default.boot'.
+
+*	Fixed stupid error in linking of chain loader.
+
+CoLo 1.5 (2004-04-11)
+---------------------
+
+*	The boot loader now has a name, "CoLo".
+	[suggested by Kumba]
+
+*	Added support for loading initial RamDisk. A second path passed to the
+	'load' command is interpreted as a file to be loaded as an initial RamDisk.
+	The 2004-04-11 2.4.x kernel patch includes the kernel side of this
+	functionality.
+	[suggested by Martin Michlmayr]
+
+*	The chain loader now halts with an error message if it's loaded from "CoLo"
+	rather than from the original Cobalt loader.
+
+# vi:set ts=3 sw=3 tw=78 ai:

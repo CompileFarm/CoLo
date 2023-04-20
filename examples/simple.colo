@@ -1,0 +1,9 @@
+#:CoLo:# $Id: simple.colo 120 2004-10-18 16:35:05Z pdh $
+#
+# load default Debian kernel from hda2
+#
+lcd 'Booting ...'
+mount hda2
+lcd 'Booting ...' /dev/{mounted-volume}
+load /vmlinux
+execute root=/dev/{mounted-volume} console=ttyS0,{console-speed}
