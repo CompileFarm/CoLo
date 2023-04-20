@@ -24,87 +24,98 @@ static size_t next_size;
 
 void heap_reset(void)
 {
-	extern char __text;
-	void *restrict;
+  extern char __text;
+  void *restricted;
 
-	assert(!((unsigned long) &__text & 15));
+  assert(!((unsigned long) &__text & 15));
 
-	free_lo = KSEG0(0);
-	free_hi = KSEG0(&__text) - (32 << 10);			// XXX
+  free_lo = KSEG0(0);
+  free_hi = KSEG0(&__text) - (32 << 10);			// XXX
+  
+  restricted = KSEG0(ram_restrict) - (16 << 10);	// XXX
+  if(free_hi > restricted)
+    {
+      free_hi = restricted;
+    }
+  image_size = 0;
+  image_size_mark = 0;
 
-	restrict = KSEG0(ram_restrict) - (16 << 10);	// XXX
-	if(free_hi > restrict)
-		free_hi = restrict;
+  env_remove_tag(VAR_INITRD);
 
-	image_size = 0;
-	image_size_mark = 0;
-
-	env_remove_tag(VAR_INITRD);
-
-	clear_reloc();
+  clear_reloc();
 }
 
 void heap_set_initrd(void *base, size_t size)
 {
-	char text[16];
+  char text[16];
 
-	sprintf(text, "%lx", (unsigned long) base);
-	env_put("initrd-start", text, VAR_INITRD);
-	sprintf(text, "%lx", (unsigned long) base + size);
-	env_put("initrd-end", text, VAR_INITRD);
-	sprintf(text, "%x", size);
-	env_put("initrd-size", text, VAR_INITRD);
+  sprintf(text, "%lx", (unsigned long) base);
+  env_put("initrd-start", text, VAR_INITRD);
+  sprintf(text, "%lx", (unsigned long) base + size);
+  env_put("initrd-end", text, VAR_INITRD);
+  sprintf(text, "%x", size);
+  env_put("initrd-size", text, VAR_INITRD);
 }
 
 void heap_initrd_vars(void)
 {
-	if(image_size_mark)
-		heap_set_initrd(image_base_mark, image_size_mark);
+  if(image_size_mark)
+    {
+      heap_set_initrd(image_base_mark, image_size_mark);
+    }
 }
 
 size_t heap_space(void)
 {
-	return free_hi - free_lo;
+  return free_hi - free_lo;
 }
 
 void *heap_reserve_lo(size_t size)
 {
-	next_size = size;
+  next_size = size;
 
-	size = (size + 15) & ~15;
+  size = (size + 15) & ~15;
 
-	if(size > heap_space())
-		return NULL;
+  if(size > heap_space())
+    {
+      return NULL;
+    }
 
-	next_lo = free_lo + size;
-	next_hi = free_hi;
+  next_lo = free_lo + size;
+  next_hi = free_hi;
 
-	return free_lo;
+  return free_lo;
 }
 
 void *heap_reserve_hi(size_t size)
 {
-	next_size = size;
+  next_size = size;
 
-	size = (size + 15) & ~15;
+  size = (size + 15) & ~15;
 
-	if(size > heap_space())
-		return NULL;
+  if(size > heap_space())
+    {
+      return NULL;
+    }
 
-	next_lo = free_lo;
-	next_hi = free_hi - size;
+  next_lo = free_lo;
+  next_hi = free_hi - size;
 
-	return next_hi;
+  return next_hi;
 }
 
 void heap_info(void)
 {
-	if(image_size) {
-		printf("%08x %ut\n", image_size, image_size);
-		if(image_size_mark)
-			printf("%08x %ut\n", image_size_mark, image_size_mark);
-	} else
-		puts("no image loaded");
+  if(image_size)
+    {
+      printf("%08x %ut\n", image_size, image_size);
+      if(image_size_mark)
+	{
+	  printf("%08x %ut\n", image_size_mark, image_size_mark);
+	}
+    } else
+
+    puts("no image loaded");
 }
 
 void heap_alloc(void)
@@ -166,42 +177,45 @@ int cmnd_heap(int opsz)
 
 int cmnd_restrict(int opsz)
 {
-	unsigned long val;
-	unsigned ram, cap;
-	char *ptr;
+  unsigned long val;
+  unsigned ram, cap;
+  char *ptr;
 
-	ram = ram_size >> 20;
-	cap = ram_restrict >> 20;
+  ram = ram_size >> 20;
+  cap = ram_restrict >> 20;
 
-	if(argc > 1) {
+  if(argc > 1)
+    {
 
-		if(argc > 2)
-			return E_ARGS_OVER;
+      if(argc > 2)
+	return E_ARGS_OVER;
 
-		val = strtoul(argv[1], &ptr, 10);
-		if(*ptr)
-			return E_BAD_VALUE;
-
-		if(val != cap) {
-
-			cap = val;
-			if(cap > ram) {
-				cap = ram;
-				printf("memory size is only %uMB\n", ram);
-			}
-
-			ram_restrict = cap << 20;
-
-			heap_reset();
-		}
+      val = strtoul(argv[1], &ptr, 10);
+      if(*ptr)
+	{
+	  return E_BAD_VALUE;
 	}
 
-	if(cap == ram)
-		printf("not restricted (%uMB)\n", ram);
-	else
-		printf("restricted to %uMB (of %uMB)\n", cap, ram);
+      if(val != cap)
+	{
+	  cap = val;
+	  if(cap > ram)
+	    {
+	      cap = ram;
+	      printf("memory size is only %uMB\n", ram);
+	    }
 
-	return E_NONE;
+	  ram_restrict = cap << 20;
+
+	  heap_reset();
+	}
+    }
+
+  if(cap == ram)
+    printf("not restricted (%uMB)\n", ram);
+  else
+    printf("restricted to %uMB (of %uMB)\n", cap, ram);
+
+  return E_NONE;
 }
 
-/* vi:set ts=3 sw=3 cin path=include,../include: */
