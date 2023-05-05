@@ -18,9 +18,11 @@ export CROSS_COMPILE
 
 include Rules.mak
 
-all: binary tooldirs
+all: binary #tooldirs
 
-binary: subdirs $(BINDIR)/$(TARGET1) $(BINDIR)/$(TARGET2)
+
+#binary: subdirs $(BINDIR)/$(TARGET1) $(BINDIR)/$(TARGET2)
+binary: subdirs $(BINDIR)/$(TARGET2)
 
 ci:
 	rm -f $(BINDIR)/$(TARGET1) $(BINDIR)/$(TARGET2)
