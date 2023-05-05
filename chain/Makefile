@@ -8,9 +8,9 @@
 
 TARG= colo-chain
 OBJS=	chain.o\
-		libmem.o\
-		start.o\
-		lcd.o\
+	libmem.o\
+	start.o\
+	lcd.o
 
 XOBJS= ../stage2/stage2.elf\
 
@@ -19,7 +19,7 @@ include ../Rules.mak
 DEPS=$(OBJS:.o=.d)
 
 LDFLAGS= -nostdlib -Wl,-T,$(TARG).lnk,-Map,$(TARG).map
-CFLAGS= -Werror -Wall -Wstrict-prototypes -fomit-frame-pointer -O2 -fno-strict-aliasing $(CFLAGS_CPU) $(CFLAGS_COLO)
+CFLAGS= -Wall -Wstrict-prototypes -fomit-frame-pointer -O2 -fno-strict-aliasing $(CFLAGS_CPU) $(CFLAGS_COLO)
 CPPFLAGS= -MD -nostdinc -Iinclude -I../include -D_DEBUG $(CPPFLAGS_GCC)
 
 all:
