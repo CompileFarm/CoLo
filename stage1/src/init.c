@@ -18,53 +18,49 @@
  */
 void cpu_init(void)
 {
-	extern char __data;
-	void *line, *end;
-	unsigned indx;
+  extern char __data;
+  void *line, *end;
+  unsigned indx;
 
-	/* ensure STATUS register is sane */
+  /* ensure STATUS register is sane */
+  MTC0(CP0_STATUS, CP0_STATUS_BEV | CP0_STATUS_ERL);
 
-	MTC0(CP0_STATUS, CP0_STATUS_BEV | CP0_STATUS_ERL);
+  /* set KSEG0 for writeback caching */
+  MTC0(CP0_CONFIG, CP0_CONFIG_K0_WRITEBACK);
 
-	/* set KSEG0 for writeback caching */
+  /* zap the caches (same size and line size) */
+  MTC0(CP0_TAGLO, 0);
 
-	MTC0(CP0_CONFIG, CP0_CONFIG_K0_WRITEBACK);
+  line = KSEG0(0);
+  for(end = line + DCACHE_TOTAL_SIZE; line < end; line += DCACHE_LINE_SIZE)
+    {
+      CACHE(CACHE_IndexStoreTagD, line);
+      CACHE(CACHE_IndexStoreTagI, line);
+    }
 
-	/* zap the caches (same size and line size) */
+  /* fill first way of the D-cache */
+  for(indx = 0; indx < DCACHE_TOTAL_SIZE / DCACHE_WAY_COUNT; indx += DCACHE_LINE_SIZE)
+    {
+      *(volatile unsigned *)(&__data + indx);
+    }
+  
+  /* lock first way of the D-cache */
+  MTC0(CP0_STATUS, CP0_STATUS_DL | CP0_STATUS_BEV | CP0_STATUS_ERL);
+  NOP(); NOP(); NOP(); NOP();
 
-	MTC0(CP0_TAGLO, 0);
+  /* flush the TLB */
+  MTC0(CP0_ENTRYLO0, 0);
+  MTC0(CP0_ENTRYLO1, 0);
 
-	line = KSEG0(0);
-	for(end = line + DCACHE_TOTAL_SIZE; line < end; line += DCACHE_LINE_SIZE) {
-		CACHE(CACHE_IndexStoreTagD, line);
-		CACHE(CACHE_IndexStoreTagI, line);
-	}
+  for(indx = 0; indx < TLB_ENTRY_COUNT; ++indx)
+    {
+      MTC0(CP0_ENTRYHI, (indx * (4 << 10) * 2) | (unsigned long) KSEG0(0));
+      MTC0(CP0_INDEX, indx);
+      TLBWI();
+    }
 
-	/* fill first way of the D-cache */
-
-	for(indx = 0; indx < DCACHE_TOTAL_SIZE / DCACHE_WAY_COUNT; indx += DCACHE_LINE_SIZE)
-		*(volatile unsigned *)(&__data + indx);
-
-	/* lock first way of the D-cache */
-
-	MTC0(CP0_STATUS, CP0_STATUS_DL | CP0_STATUS_BEV | CP0_STATUS_ERL);
-
-	NOP(); NOP(); NOP(); NOP();
-
-	/* flush the TLB */
-
-	MTC0(CP0_ENTRYLO0, 0);
-	MTC0(CP0_ENTRYLO1, 0);
-
-	for(indx = 0; indx < TLB_ENTRY_COUNT; ++indx) {
-		MTC0(CP0_ENTRYHI, (indx * (4 << 10) * 2) | (unsigned long) KSEG0(0));
-		MTC0(CP0_INDEX, indx);
-		TLBWI();
-	}
-
-	/* drop exception level */
-
-	MTC0(CP0_STATUS, CP0_STATUS_DL | CP0_STATUS_BEV);
+  /* drop exception level */
+  MTC0(CP0_STATUS, CP0_STATUS_DL | CP0_STATUS_BEV);
 }
 
 /*
@@ -72,23 +68,22 @@ void cpu_init(void)
  */
 void fatal(void)
 {
-	unsigned leds;
+  unsigned leds;
 
-	/*
-	 * writing 0x0f to the LED register resets the unit
-	 * so we can't turn on all 4 LEDs together
-	 *
-	 * on the Qube we Flash the light bar and on the RaQ
-	 * we flash the "power off" and "web" LEDs alternately
-	 */
+  /*
+   * writing 0x0f to the LED register resets the unit
+   * so we can't turn on all 4 LEDs together
+   *
+   * on the Qube we Flash the light bar and on the RaQ
+   * we flash the "power off" and "web" LEDs alternately
+   */
 
-	for(leds = LED_RAQ_WEB | LED_QUBE_LEFT | LED_QUBE_RIGHT;;) {
-
-		*(volatile uint8_t *) BRDG_NCS0_BASE = leds;
-		udelay(400000);
-
-		leds ^= LED_RAQ_WEB | LED_RAQ_POWER_OFF | LED_QUBE_LEFT | LED_QUBE_RIGHT;
-	}
+  for(leds = LED_RAQ_WEB | LED_QUBE_LEFT | LED_QUBE_RIGHT;;)
+    {
+      *(volatile uint8_t *) BRDG_NCS0_BASE = leds;
+      udelay(400000);
+      leds ^= LED_RAQ_WEB | LED_RAQ_POWER_OFF | LED_QUBE_LEFT | LED_QUBE_RIGHT;
+    }
 }
 
 /*
@@ -98,25 +93,27 @@ void fatal(void)
  */
 void exception(unsigned long vect)
 {
-	static char buf0[] = "!EXCEPTION #x  !";
-	static char buf1[] = "EPC xxxxxxxx xxx";
-	unsigned long epc;
-	unsigned cause;
+  static char buf0[] = "!EXCEPTION #x  !";
+  static char buf1[] = "EPC xxxxxxxx xxx";
+  unsigned long epc;
+  unsigned cause;
 
-	epc = MFC0(CP0_EPC);
-	cause = MFC0(CP0_CAUSE);
-	if(cause & CP0_CAUSE_BD)
-		epc += 4;
-	cause = (cause >> 2) & 0x1f;
+  epc = MFC0(CP0_EPC);
+  cause = MFC0(CP0_CAUSE);
+  if(cause & CP0_CAUSE_BD)
+    {
+      epc += 4;
+    }
+  cause = (cause >> 2) & 0x1f;
+	
+  to_decimal(buf0 + 12, cause);
+  to_hex(buf1 + 4, epc, 8);
+  to_hex(buf1 + 13, vect, 3);
 
-	to_decimal(buf0 + 12, cause);
-	to_hex(buf1 + 4, epc, 8);
-	to_hex(buf1 + 13, vect, 3);
+  lcd_line(0, buf0);
+  lcd_line(1, buf1);
 
-	lcd_line(0, buf0);
-	lcd_line(1, buf1);
-
-	fatal();
+  fatal();
 }
 
-/* vi:set ts=3 sw=3 cin path=include,../include: */
+

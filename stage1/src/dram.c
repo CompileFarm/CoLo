@@ -17,22 +17,21 @@
  */
 static void dram_decode(int group, unsigned long base, size_t size, int pair)
 {
-	unsigned offset;
+  unsigned offset;
 	
-	offset = (BRDG_REG_RAS23_LOW_DECODE - BRDG_REG_RAS01_LOW_DECODE) * !!group;
+  offset = (BRDG_REG_RAS23_LOW_DECODE - BRDG_REG_RAS01_LOW_DECODE) * !!group;
 
-	BRDG_REG_WORD(BRDG_REG_RAS01_HIGH_DECODE + offset) = (base + (pair ? size * 2 : size) - 1) >> 21;
-	BRDG_REG_WORD(BRDG_REG_RAS01_LOW_DECODE + offset) = base >> 21;
+  BRDG_REG_WORD(BRDG_REG_RAS01_HIGH_DECODE + offset) = (base + (pair ? size * 2 : size) - 1) >> 21;
+  BRDG_REG_WORD(BRDG_REG_RAS01_LOW_DECODE + offset) = base >> 21;
 
-	BRDG_REG_WORD(BRDG_REG_RAS0_HIGH_DECODE + offset) = (base + size - 1) >> 20;
-	BRDG_REG_WORD(BRDG_REG_RAS0_LOW_DECODE + offset) = base >> 20;
+  BRDG_REG_WORD(BRDG_REG_RAS0_HIGH_DECODE + offset) = (base + size - 1) >> 20;
+  BRDG_REG_WORD(BRDG_REG_RAS0_LOW_DECODE + offset) = base >> 20;
 
-	/* if we've only one bank this will be outside the group window */
+  /* if we've only one bank this will be outside the group window */
+  base += size;
 
-	base += size;
-
-	BRDG_REG_WORD(BRDG_REG_RAS1_HIGH_DECODE + offset) = (base + size - 1) >> 20;
-	BRDG_REG_WORD(BRDG_REG_RAS1_LOW_DECODE + offset) = base >> 20;
+  BRDG_REG_WORD(BRDG_REG_RAS1_HIGH_DECODE + offset) = (base + size - 1) >> 20;
+  BRDG_REG_WORD(BRDG_REG_RAS1_LOW_DECODE + offset) = base >> 20;
 }
 
 /*
@@ -40,48 +39,49 @@ static void dram_decode(int group, unsigned long base, size_t size, int pair)
  */
 static size_t dram_size(unsigned long base, size_t size, unsigned offset)
 {
-	static const unsigned map[8] = {
-		[0] = 12, [4] = 11, [6] = 10, [7] = 9,
-	};
-	unsigned mask, rbits, cbits;
-	volatile unsigned *ram;
+  static const unsigned map[8] =
+    {
+      [0] = 12, [4] = 11, [6] = 10, [7] = 9,
+    };
+  unsigned mask, rbits, cbits;
+  volatile unsigned *ram;
 
-	/* set row size to 12 bits (and minimum cycle counts) */
-
-	BRDG_REG_WORD(offset) = (12 - 9) << 4;
+  /* set row size to 12 bits (and minimum cycle counts) */
+  BRDG_REG_WORD(offset) = (12 - 9) << 4;
 	
-	/* find unused address lines */
+  /* find unused address lines */
+  ram = (volatile unsigned *) KSEG1(base);
+  ram[0] = 0;
+  for(mask = sizeof(unsigned); mask < size; mask <<= 1)
+    {
+      ram[mask / sizeof(unsigned)] |= mask;
+    }
+  mask = ram[0];
 
-	ram = (volatile unsigned *) KSEG1(base);
+  /* calculate row/column sizes */
+  rbits = mask & (7 << 14);
+  mask ^= rbits;
+  rbits = map[rbits >> 14];
 
-	ram[0] = 0;
-	for(mask = sizeof(unsigned); mask < size; mask <<= 1)
-		ram[mask / sizeof(unsigned)] |= mask;
-	mask = ram[0];
+  cbits = mask & (7 << 23);
+  mask ^= cbits;
+  cbits = map[cbits >> 23];
 
-	/* calculate row/column sizes */
-
-	rbits = mask & (7 << 14);
-	mask ^= rbits;
-	rbits = map[rbits >> 14];
-
-	cbits = mask & (7 << 23);
-	mask ^= cbits;
-	cbits = map[cbits >> 23];
-
-	if(mask || !rbits || !cbits)
-		return 0;
-
+  if(mask || !rbits || !cbits)
+    {
+      return 0;
+    }
+  
 	/* quick test just to make sure there's RAM there */
-
-	for(mask = 1; mask; mask <<= 1)
-		*ram++ = mask;
-
+  	for(mask = 1; mask; mask <<= 1)
+	  {
+	    *ram++ = mask;
+	  }
 	for(mask = ~0; mask; mask <<= 1)
-		*ram++ = mask;
-
+	  {
+	    *ram++ = mask;
+	  }
 	ram = (volatile unsigned *) KSEG1(base);
-
 	for(mask = 1; mask; mask <<= 1)
 		if(*ram++ != mask)
 			return 0;
@@ -91,9 +91,7 @@ static size_t dram_size(unsigned long base, size_t size, unsigned offset)
 			return 0;
 
 	/* set correct row size (and minimum cycle counts) */
-
 	BRDG_REG_WORD(offset) = (rbits - 9) << 4;
-
 	return 1 << (rbits + cbits + 2);
 }
 
@@ -159,4 +157,4 @@ size_t *dram_init(size_t *size)
 	return bank;
 }
 
-/* vi:set ts=3 sw=3 cin path=include,../include: */
+

@@ -63,43 +63,43 @@
 
 static struct ide_device
 {
-	const char		*name;
-	unsigned			select;
-	unsigned			flags;
-	unsigned			mode;
+  const char		*name;
+  unsigned			select;
+  unsigned			flags;
+  unsigned			mode;
+  unsigned long	devsize;
+  unsigned			nsects;
+  unsigned			ncyls;
+  unsigned			nheads;
 
-	unsigned long	devsize;
-	unsigned			nsects;
-	unsigned			ncyls;
-	unsigned			nheads;
-
-} ide_bus[2] = {
-	{
-		.name = "hda"
-	}, {
-		.name = "hdb",
-		.select = REG_HEAD_SLAVE
-	}
+} ide_bus[2] =
+  {
+    {
+      .name = "hda"
+    },
+    {
+      .name = "hdb",
+      .select = REG_HEAD_SLAVE
+    }
 };
 
 struct part_entry
 {
-	uint32_t boot:8;
-	uint32_t start_chs:24;
-	uint32_t type:8;
-	uint32_t end_chs:24;
-	uint32_t start_lba;
-	uint32_t size_lba;
+  uint32_t boot:8;
+  uint32_t start_chs:24;
+  uint32_t type:8;
+  uint32_t end_chs:24;
+  uint32_t start_lba;
+  uint32_t size_lba;
 
 } __attribute__((packed));
 
 static struct
 {
-	struct ide_device	*dev;
-	unsigned long		offset;
-	unsigned				block;
-	char					ident[8];
-
+  struct ide_device	*dev;
+  unsigned long		offset;
+  unsigned				block;
+  char					ident[8];
 } selected;
 
 static unsigned reg_head;

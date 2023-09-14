@@ -12,9 +12,9 @@
 
 // XXX expire old ARP entries
 
-#define ARP_PAYLOAD_SIZE				28
-#define ARP_OP_REQUEST					1
-#define ARP_OP_REPLY						2
+#define ARP_PAYLOAD_SIZE	28
+#define ARP_OP_REQUEST		1
+#define ARP_OP_REPLY		2
 
 uint32_t	ip_addr;
 uint32_t ip_mask;
@@ -23,17 +23,16 @@ uint32_t ip_nsvr;
 
 static struct
 {
-	enum {
-		ARP_UNUSED = 0,
-		ARP_UNRESOLVED,
-		ARP_RESOLVED,
-	} state;
+  enum {
+    ARP_UNUSED = 0,
+    ARP_UNRESOLVED,
+    ARP_RESOLVED,
+  } state;
 
-	struct frame	*head;
-	struct frame	*tail;
-	uint32_t			ip;
-	uint16_t			hw[3];
-
+  struct frame	*head;
+  struct frame	*tail;
+  uint32_t			ip;
+  uint16_t			hw[3];
 } arp_table[8];
 
 /*
@@ -41,21 +40,21 @@ static struct
  */
 void arp_out(struct frame *frame, const void *dest, unsigned prot)
 {
-	const uint16_t bcast[] = { 0xffff, 0xffff, 0xffff };
-	void *data;
+  const uint16_t bcast[] = { 0xffff, 0xffff, 0xffff };
+  void *data;
 
-	if(!dest)
-		dest = bcast;
+  if(!dest)
+    dest = bcast;
 
-	FRAME_HEADER(frame, HARDWARE_HDRSZ);
+  FRAME_HEADER(frame, HARDWARE_HDRSZ);
 
-	data = FRAME_PAYLOAD(frame);
+  data = FRAME_PAYLOAD(frame);
 
-	COPY_HW_ADDR(data + 0, dest);
-	COPY_HW_ADDR(data + 6, hw_addr);
-	NET_WRITE_SHORT(data + 12, prot);
+  COPY_HW_ADDR(data + 0, dest);
+  COPY_HW_ADDR(data + 6, hw_addr);
+  NET_WRITE_SHORT(data + 12, prot);
 
-	tulip_out(frame);
+  tulip_out(frame);
 }
 
 /*
@@ -287,13 +286,16 @@ void arp_ip_out(struct frame *frame, uint32_t ip)
  */
 void arp_flush_all(void)
 {
-	unsigned indx;
+  unsigned indx;
 
-	for(indx = 0; indx < elements(arp_table); ++indx)
-		if(arp_table[indx].state != ARP_UNUSED) {
-			arp_discard(indx);
-			arp_table[indx].state = ARP_UNUSED;
-		}
+  for(indx = 0; indx < elements(arp_table); ++indx)
+    {
+      if(arp_table[indx].state != ARP_UNUSED)
+	{
+	  arp_discard(indx);
+	  arp_table[indx].state = ARP_UNUSED;
+	}
+    }
 }
 
 /* vi:set ts=3 sw=3 cin path=include,../include: */

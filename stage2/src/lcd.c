@@ -39,12 +39,12 @@ int (*lcd_menu)(const char **, unsigned, unsigned) = lcd_menu_init;
  */
 static void lcd_wait(void)
 {
-	unsigned mark;
+  unsigned mark;
 
-	for(mark = MFC0(CP0_COUNT); (_LCD_READ(0) & LCD_BUSY) && MFC0(CP0_COUNT) - mark < LCD_TIMEOUT;)
-		udelay(2);
+  for(mark = MFC0(CP0_COUNT); (_LCD_READ(0) & LCD_BUSY) && MFC0(CP0_COUNT) - mark < LCD_TIMEOUT;)
+    udelay(2);
 
-	udelay(10);
+  udelay(10);
 }
 
 /*
@@ -52,16 +52,15 @@ static void lcd_wait(void)
  */
 static void lcd_text(const char *str, int size)
 {
-	unsigned indx;
+  unsigned indx;
 
-	indx = 0;
+  indx = 0;
+  if(str)
+    for(; indx < (unsigned) size && str[indx]; ++indx)
+      LCD_WRITE(1, str[indx]);
 
-	if(str)
-		for(; indx < (unsigned) size && str[indx]; ++indx)
-			LCD_WRITE(1, str[indx]);
-
-	for(; indx < size; ++indx)
-		LCD_WRITE(1, ' ');
+  for(; indx < size; ++indx)
+    LCD_WRITE(1, ' ');
 }
 
 /*
@@ -79,19 +78,17 @@ void lcd_line(int row, const char *str)
  */
 static void lcd_prog_chars(void)
 {
-	static uint8_t data[] = {
-		0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01, 0x00,		/* left arrow */
-		0x10, 0x18, 0x1c, 0x1e, 0x1c, 0x18, 0x10, 0x00,		/* right arrow  */
-	};
-	static unsigned indx;
+  static uint8_t data[] = {
+    0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01, 0x00,		/* left arrow */
+    0x10, 0x18, 0x1c, 0x1e, 0x1c, 0x18, 0x10, 0x00,		/* right arrow  */
+  };
+  static unsigned indx;
 
-	if(!indx) {
-
-		LCD_WRITE(0, LCD_CGRAM_ADDR | 8);
-
-		for(indx = 0; indx < sizeof(data); ++indx)
-			LCD_WRITE(1, data[indx]);
-	}
+  if(!indx) {
+    LCD_WRITE(0, LCD_CGRAM_ADDR | 8);
+    for(indx = 0; indx < sizeof(data); ++indx)
+      LCD_WRITE(1, data[indx]);
+  }
 }
 
 /*
@@ -99,19 +96,19 @@ static void lcd_prog_chars(void)
  */
 static void lcd_centre(char *buf, const char *str, unsigned siz)
 {
-	unsigned ofs, len, idx;
+  unsigned ofs, len, idx;
 
-	ofs = 0;
-	len = strlen(str);
-	if(len < siz)
-		ofs = (siz - len) / 2;
+  ofs = 0;
+  len = strlen(str);
+  if(len < siz)
+    ofs = (siz - len) / 2;
 
-	for(idx = 0; idx < siz; ++idx) {
-
-		buf[idx] = ' ';
-		if(idx >= ofs && idx < ofs + len)
-			buf[idx] = *str++;
-	}
+  for(idx = 0; idx < siz; ++idx)
+    {
+      buf[idx] = ' ';
+      if(idx >= ofs && idx < ofs + len)
+	buf[idx] = *str++;
+    }
 }
 
 /*
