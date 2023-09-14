@@ -18,7 +18,7 @@ static unsigned hist_tail;
  */
 int history_add(const char *line)
 {
-	unsigned dest, used, top;
+ unsigned dest, used, top;
 	size_t size;
 
 	size = strlen(line);
