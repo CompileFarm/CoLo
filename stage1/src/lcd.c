@@ -84,4 +84,3 @@ void lcd_line(int row, const char *str)
 		LCD_WRITE(1, ' ');
 }
 
-/* vi:set ts=3 sw=3 cin path=include,../include: */
